@@ -31,7 +31,7 @@ class PlayerController extends AbstractController
     }
 
     #[Route('/players', name: 'create_player', methods: ['POST'])]
-    public function createPlayer(Request $request, EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
+    public function createPlayer(Request $request, EntityManagerInterface $entityManager, SerializerInterface $serializer, TeamRepository $teamRepository): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         // TODO: vérifier les données reçues
@@ -39,6 +39,13 @@ class PlayerController extends AbstractController
         $player = new Player();
         $player->setFirstname($data['firstname']);
         $player->setLastname($data['lastname']);
+        if (isset($data['team'])) {
+            $team = $teamRepository->find($data['team']);
+            if (!$team) {
+                return new JsonResponse(["error" => "Team not found"], 404);
+            }
+            $player->setTeam($team);
+        }
 
         $entityManager->persist($player);
         $entityManager->flush();
