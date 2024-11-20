@@ -10,28 +10,25 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Serializer\SerializerInterface;
 
 class PlayerController extends AbstractController
 {
     #[Route('/players/{id}', name: 'player_by_id', methods: ['GET'])]
-    public function findPlayerById(PlayerRepository $playerRepository, SerializerInterface $serializer, int $id): JsonResponse
+    public function findPlayerById(PlayerRepository $playerRepository, int $id): JsonResponse
     {
-        $players = $playerRepository->findOneBy(["id" => $id]);
-        $jsonContent = $serializer->serialize($players, 'json', ['groups' => 'player:read']);
-        return new JsonResponse($jsonContent, 200, [], true);
+        $player = $playerRepository->findOneBy(["id" => $id]);
+        return $this->json($player, 200, [], ["groups" => "player:read"]);
     }
 
     #[Route('/players', name: 'get_player', methods: ['GET'])]
-    public function getPlayers(PlayerRepository $playerRepository, SerializerInterface $serializer): JsonResponse
+    public function getPlayers(PlayerRepository $playerRepository): JsonResponse
     {
         $players = $playerRepository->findAll();
-        $jsonContent = $serializer->serialize($players, 'json', ['groups' => 'player:read']);
-        return new JsonResponse($jsonContent, 200, [], true);
+        return $this->json($players, 200, [], ["groups" => "player:read"]);
     }
 
     #[Route('/players', name: 'create_player', methods: ['POST'])]
-    public function createPlayer(Request $request, EntityManagerInterface $entityManager, SerializerInterface $serializer, TeamRepository $teamRepository): JsonResponse
+    public function createPlayer(Request $request, EntityManagerInterface $entityManager, TeamRepository $teamRepository): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         // TODO: vérifier les données reçues
@@ -50,12 +47,11 @@ class PlayerController extends AbstractController
         $entityManager->persist($player);
         $entityManager->flush();
 
-        $jsonContent = $serializer->serialize($player, 'json', ['groups' => 'player:read']);
-        return new JsonResponse($jsonContent, 201, [], true);
+        return $this->json($player, 200, [], ["groups" => "player:read"]);
     }
 
     #[Route('/players/{id}', name: 'update_player', methods: ['PUT'])]
-    public function updatePlayer(Request $request, EntityManagerInterface $entityManager, SerializerInterface $serializer, PlayerRepository $playerRepository, TeamRepository $teamRepository, int $id): JsonResponse
+    public function updatePlayer(Request $request, EntityManagerInterface $entityManager, PlayerRepository $playerRepository, TeamRepository $teamRepository, int $id): JsonResponse
     {
         $player = $playerRepository->find($id);
         if (!$player) {
@@ -82,8 +78,7 @@ class PlayerController extends AbstractController
         $entityManager->persist($player);
         $entityManager->flush();
 
-        $jsonContent = $serializer->serialize($player, 'json', ['groups' => 'player:read']);
-        return new JsonResponse($jsonContent, 201, [], true);
+        $this->json($player, 200, [], ["groups" => "player:read"]);
     }
 
     #[Route('/players/{id}', name: 'delete_player', methods: ['DELETE'])]
