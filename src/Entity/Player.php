@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\PlayerRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: PlayerRepository::class)]
 class Player
@@ -16,10 +17,14 @@ class Player
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Le prénom ne doit pas être vide.")]
+    #[Assert\Length(min: 2, minMessage: "Le prénom doit faire au moins 2 charactères.")]
     #[Groups(['team:read', 'player:read'])]
     private ?string $firstname = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Le nom ne doit pas être vide.")]
+    #[Assert\Length(min: 2, minMessage: "Le nom doit faire au moins 2 charactères.")]
     #[Groups(['team:read', 'player:read'])]
     private ?string $lastname = null;
 

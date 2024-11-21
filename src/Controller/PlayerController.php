@@ -5,11 +5,13 @@ namespace App\Controller;
 use App\Entity\Player;
 use App\Repository\PlayerRepository;
 use App\Repository\TeamRepository;
+use App\Service\EntityValidationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class PlayerController extends AbstractController
 {
@@ -28,7 +30,7 @@ class PlayerController extends AbstractController
     }
 
     #[Route('/players', name: 'create_player', methods: ['POST'])]
-    public function createPlayer(Request $request, EntityManagerInterface $entityManager, TeamRepository $teamRepository): JsonResponse
+    public function createPlayer(Request $request, EntityManagerInterface $entityManager, TeamRepository $teamRepository, EntityValidationService $validationService): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         // TODO: vérifier les données reçues
@@ -44,6 +46,11 @@ class PlayerController extends AbstractController
             $player->setTeam($team);
         }
 
+        $validationErrors = $validationService->validate($player, ['create']);
+        if (!empty($validationErrors)) {
+            return new JsonResponse(["errors" => $validationErrors], 400);
+        }
+
         $entityManager->persist($player);
         $entityManager->flush();
 
@@ -51,7 +58,7 @@ class PlayerController extends AbstractController
     }
 
     #[Route('/players/{id}', name: 'update_player', methods: ['PUT'])]
-    public function updatePlayer(Request $request, EntityManagerInterface $entityManager, PlayerRepository $playerRepository, TeamRepository $teamRepository, int $id): JsonResponse
+    public function updatePlayer(Request $request, EntityManagerInterface $entityManager, PlayerRepository $playerRepository, TeamRepository $teamRepository, EntityValidationService $validationService, int $id): JsonResponse
     {
         $player = $playerRepository->find($id);
         if (!$player) {
@@ -73,6 +80,11 @@ class PlayerController extends AbstractController
                 return new JsonResponse(["error" => "Team not found"], 404);
             }
             $player->setTeam($team);
+        }
+
+        $validationErrors = $validationService->validate($player);
+        if (!empty($validationErrors)) {
+            return new JsonResponse(["errors" => $validationErrors], 400);
         }
 
         $entityManager->persist($player);
