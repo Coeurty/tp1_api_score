@@ -30,8 +30,13 @@ class PlayerController extends AbstractController
     }
 
     #[Route('/players', name: 'create_player', methods: ['POST'])]
-    public function createPlayer(Request $request, EntityManagerInterface $entityManager, TeamRepository $teamRepository, EntityValidationService $validationService): JsonResponse
-    {
+    public function createPlayer(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        TeamRepository $teamRepository,
+        EntityValidationService $validationService
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted("ROLE_USER");
         $data = json_decode($request->getContent(), true);
         // TODO: vérifier les données reçues
 
@@ -46,7 +51,7 @@ class PlayerController extends AbstractController
             $player->setTeam($team);
         }
 
-        $validationErrors = $validationService->validate($player, ['create']);
+        $validationErrors = $validationService->validate($player);
         if (!empty($validationErrors)) {
             return new JsonResponse(["errors" => $validationErrors], 400);
         }
@@ -58,8 +63,15 @@ class PlayerController extends AbstractController
     }
 
     #[Route('/players/{id}', name: 'update_player', methods: ['PUT'])]
-    public function updatePlayer(Request $request, EntityManagerInterface $entityManager, PlayerRepository $playerRepository, TeamRepository $teamRepository, EntityValidationService $validationService, int $id): JsonResponse
-    {
+    public function updatePlayer(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        PlayerRepository $playerRepository,
+        TeamRepository $teamRepository,
+        EntityValidationService $validationService,
+        int $id
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted("ROLE_USER");
         $player = $playerRepository->find($id);
         if (!$player) {
             return new JsonResponse(['error' => 'Player not found'], 404);
@@ -90,12 +102,16 @@ class PlayerController extends AbstractController
         $entityManager->persist($player);
         $entityManager->flush();
 
-        $this->json($player, 200, [], ["groups" => "player:read"]);
+        return $this->json($player, 200, [], ["groups" => "player:read"]);
     }
 
     #[Route('/players/{id}', name: 'delete_player', methods: ['DELETE'])]
-    public function deletePlayer(int $id, PlayerRepository $playerRepository, EntityManagerInterface $entityManager): JsonResponse
-    {
+    public function deletePlayer(
+        int $id,
+        PlayerRepository $playerRepository,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted("ROLE_USER");
         $player = $playerRepository->find($id);
 
         if (!$player) {

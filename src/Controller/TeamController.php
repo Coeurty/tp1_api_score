@@ -30,8 +30,11 @@ class TeamController extends AbstractController
     }
 
     #[Route('/teams', name: 'create_team', methods: ['POST'])]
-    public function createTeam(Request $request, EntityManagerInterface $entityManager): JsonResponse
-    {
+    public function createTeam(
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted("ROLE_USER");
         $data = json_decode($request->getContent(), true);
         // TODO: vérifier les données reçues
 
@@ -45,8 +48,13 @@ class TeamController extends AbstractController
     }
 
     #[Route('/teams/{id}', name: 'update_team', methods: ['PUT'])]
-    public function updateTeam(Request $request, EntityManagerInterface $entityManager, TeamRepository $teamRepository, int $id): JsonResponse
-    {
+    public function updateTeam(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        TeamRepository $teamRepository,
+        int $id
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted("ROLE_USER");
         $team = $teamRepository->find($id);
         if (!$team) {
             return new JsonResponse(['error' => 'Team not found'], 404);
@@ -69,8 +77,12 @@ class TeamController extends AbstractController
     }
 
     #[Route('/teams/{id}', name: 'delete_team', methods: ['DELETE'])]
-    public function deleteTeam(int $id, TeamRepository $teamRepository, EntityManagerInterface $entityManager): JsonResponse
-    {
+    public function deleteTeam(
+        int $id,
+        TeamRepository $teamRepository,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted("ROLE_USER");
         $team = $teamRepository->find($id);
         if (!$team) {
             return new JsonResponse(['error' => 'Team not found'], 404);
