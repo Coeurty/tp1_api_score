@@ -91,4 +91,29 @@ class TeamController extends AbstractController
         $entityManager->flush();
         return new JsonResponse(['message' => 'Team successfully deleted'], 200);
     }
+
+    #[Route('/teams/{teamId}/win', name: 'team_win', methods: ['GET'])]
+    public function teamWin(
+        int $teamId,
+        TeamRepository $teamRepository,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted("ROLE_USER");
+        $team = $teamRepository->find($teamId);
+        if (!$team) {
+            return new JsonResponse(['error' => 'Team not found'], 404);
+        }
+
+        $teamScore = $team->getScore();
+        // TODO: mettre le score à 0 dès la création + contrainte non nulle
+        if (is_null($teamScore)) {
+            $teamScore = 0;
+        }
+        $teamScore += 3;
+        $team->setScore($teamScore);
+
+        $entityManager->persist($team);
+        $entityManager->flush();
+        return $this->json($team, 200, [], ["groups" => "team:read"]);
+    }
 }
